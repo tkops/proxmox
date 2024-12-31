@@ -1,0 +1,109 @@
+---
+- name: Read ssh pub key
+  set_fact:
+    ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+- name: Create nextcloud vm from clone
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    name: "{{ item }}"
+    node: pve
+    clone: "{{ clone_name }}"
+    full: true
+    storage: local-lvm
+
+- name: Gather vm config
+  remote_user: root
+  delegate_to: proxmox
+  register: vmconfig
+  changed_when: false
+  until: vmconfig.rc == 0
+  retries: 10
+  delay: 1
+  ansible.builtin.shell: |
+    qm config {{ hostvars[item]['vmid'] }}
+
+- name: Check cloudinit drive exists
+  ansible.builtin.set_fact:
+    proxmox_cloud_init_drive_attached: >-
+      {{ vmconfig.stdout | regex_search('ide[0-9]:.*cloudinit,media=cdrom') is not none }}
+
+- name: Add cloudinit drive
+  remote_user: root
+  delegate_to: proxmox
+  when: not proxmox_cloud_init_drive_attached
+  ansible.builtin.command: |
+    qm set {{ hostvars[item]['vmid'] }} --ide0 local-lvm:cloudinit
+
+- name: Get Proxmox API token
+  ansible.builtin.uri:
+    url: "https://192.168.178.150:8006/api2/json/access/ticket"
+    method: POST
+    body:
+      username: "root@pam"
+      password: "{{ proxmox_password }}"
+    body_format: json
+    validate_certs: false
+  register: auth_response
+
+- name: Set authentication tokens
+  ansible.builtin.set_fact:
+    pve_auth_cookie: "{{ auth_response.json.data.ticket }}"
+    csrf_token: "{{ auth_response.json.data.CSRFPreventionToken }}"
+
+- name: Gather vm infos from api
+  register: proxmox_vm_info_api
+  ansible.builtin.uri:
+    url: "https://192.168.178.150:8006/api2/json/nodes/pve/qemu"
+    method: GET
+    headers:
+      Cookie: "PVEAuthCookie={{ pve_auth_cookie }}"
+    validate_certs: false
+
+- name: Gather vm infos with ansible module
+  register: proxmox_vm_info
+  community.general.proxmox_vm_info:
+    api_host: "{{ proxmox_api }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    node: pve
+    type: qemu
+    vmid: "{{ hostvars[item]['vmid'] }}"
+
+- name: Set ip address
+  register: proxmox_ci
+  until: proxmox_ci.failed == false
+  retries: 10
+  delay: 1
+  changed_when: false
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    name: "{{ item }}"
+    node: pve
+    sshkeys: "{{ ssh_public_key }}"
+    ciuser: "{{ cloud_init_user }}"
+    cipassword: "{{ cloud_init_password }}"
+    ipconfig:
+      ipconfig0: "ip={{ hostvars[item]['ansible_host'] }}/{{ proxmox_network_prefix }},gw={{ proxmox_gateway }}"
+    update: yes
+
+- name: Start nextcloud vm
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    name: "{{ item }}"
+    state: started
+
+- name: Wait for SSH to become available
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[item]['ansible_host'] }}"
+    port: 22
+    delay: 5
+    timeout: 300
+    state: started
+  delegate_to: localhost

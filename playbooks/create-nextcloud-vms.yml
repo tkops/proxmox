@@ -1,0 +1,14 @@
+---
+- name: Clone a VM on Proxmox
+  hosts: ansible
+  gather_facts: false
+  vars:
+    clone_name: cloud-init 
+    loop_group: "{{ groups['nextcloud'] }}"
+    vmid: "{{ hostvars[inventory_hostname]['vmid'] }}"
+  tasks:
+    - name: Loop through hostgroup
+      loop: "{{ loop_group }}"
+      ansible.builtin.include_role:
+        name: create_vm
+      

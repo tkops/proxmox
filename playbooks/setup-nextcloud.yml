@@ -1,0 +1,109 @@
+---
+- name: Setup nextcloud service in a container
+  hosts: nextcloud
+  gather_facts: true
+  tasks:
+    - name: Root operations
+      become: true
+      block:
+        - name: Open port 8080 in the firewall
+          ansible.posix.firewalld:
+            port: 8080/tcp
+            permanent: true
+            state: enabled
+
+        - name: Reload firewalld
+          ansible.builtin.command:
+            cmd: firewall-cmd --reload
+          changed_when: false
+
+        - name: Add nextcloud group
+          ansible.builtin.group:
+            name: "{{ nextcloud_user }}"
+
+        - name: Add nextcloud user
+          ansible.builtin.user:
+            name: "{{ nextcloud_user }}"
+            state: present
+            shell: /bin/bash
+            password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) | password_hash('sha512') }}"
+            create_home: yes
+            update_password: on_create
+
+        - name: Install podman
+          ansible.builtin.package:
+            name: podman
+            state: present
+
+        - name: Get UID of the user
+          ansible.builtin.command: "id -u {{ nextcloud_user }}"
+          register: user_uid
+    
+        - name: Set fact with user UID
+          ansible.builtin.set_fact:
+            user_uid: "{{ user_uid.stdout | int }}"
+
+        - name: Enable linger for nextcloud user
+          shell: |
+            loginctl enable-linger {{ user_uid }}
+
+        - name: Create custom container network
+          become_user: "{{ nextcloud_user }}"
+          containers.podman.podman_network:
+            name: "{{ nextcloud_network }}"
+            state: present
+    
+        - name: Deploy MariaDB container
+          become_user: "{{ nextcloud_user }}"
+          containers.podman.podman_container:
+            name: mariadb
+            image: docker.io/library/mariadb:10.6
+            state: started
+            network: "{{ nextcloud_network }}"
+            env:
+              MYSQL_DATABASE: "{{ nextcloud_db_name }}"
+              MYSQL_USER: "{{ nextcloud_db_user }}"
+              MYSQL_PASSWORD: "{{ nextcloud_password }}"
+              MYSQL_ROOT_PASSWORD: "{{ nextcloud_password }}"
+            volumes:
+              - "db:/var/lib/mysql"
+
+        - name: Deploy nextcloud container
+          become_user: "{{ nextcloud_user }}"
+          containers.podman.podman_container:
+            name: nextcloud
+            image: docker.io/library/nextcloud:30
+            state: started
+            network: "{{ nextcloud_network }}"
+            env:
+              MYSQL_HOST: mariadb
+              MYSQL_PORT: 3306
+              MYSQL_DATABASE: "{{ nextcloud_db_name }}"
+              MYSQL_USER: "{{ nextcloud_db_user }}"
+              MYSQL_PASSWORD: "{{ nextcloud_password }}"
+              NEXTCLOUD_ADMIN_USER: "{{ nextcloud_user }}"
+              NEXTCLOUD_ADMIN_PASSWORD: "{{ nextcloud_password  }}"
+            volumes:
+              - "app:/var/www/html"
+            ports:
+              - "8080:80"
+ 
+        - name: Pause
+          ansible.builtin.pause:
+            seconds: 10
+
+        - name: Add nexcloud to trusted domain
+          tags: nextcloud_trusted_domain
+          register: nextcloud_trusted_domain_results
+          until: nextcloud_trusted_domain_results.failed == false
+          retries: 10
+          delay: 1
+          loop:
+            - "    2 => '192.168.178.102',"
+            - "    1 => 't5s.srvdns.de',"
+          ansible.builtin.lineinfile:
+            path: "/home/{{ nextcloud_user }}/.local/share/containers/storage/volumes/app/_data/config/config.php"
+            insertafter: "^    0 => 'localhost',"
+            line: "{{ item }}"
+            state: present
+

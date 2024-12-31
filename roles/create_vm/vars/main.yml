@@ -1,0 +1,2 @@
+---
+vmid: "{{ hostvars[inventory_hostname]['vmid'] }}"

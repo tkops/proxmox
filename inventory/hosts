@@ -1,0 +1,8 @@
+ansible ansible_connection=local vmid=100
+
+nextcloud-prod ansible_host=192.168.178.58 vmid=101
+
+proxmox ansible_host=192.168.178.150
+
+[nextcloud]
+nextcloud-test ansible_host=192.168.178.102 vmid=102

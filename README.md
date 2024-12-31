@@ -1,5 +1,6 @@
 # proxmox-nextcloud
 ## Installation Summary
+--------------------------------------------------------------------------------------------
 | **Localization**  | Keyboard                  | German                                   |
 |                   | Language Support          | English                                  |
 |                   | Time & Date               | Europe/Berlin                            |

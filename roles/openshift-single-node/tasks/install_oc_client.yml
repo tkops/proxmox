@@ -1,0 +1,24 @@
+- name: Download oc client
+  ansible.builtin.get_url:
+    url: "{{ sno_oc_client_download_url }}"
+    dest: "{{ sno_ocp_config_dir }}/oc.tar.gz"
+    validate_certs: no
+
+- name: Extract openshift-install binary
+  ansible.builtin.unarchive:
+    src: "{{ sno_ocp_config_dir }}/oc.tar.gz"
+    dest: "/tmp/"
+    remote_src: yes
+
+- name: Move openshift-install to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: "{{ sno_ocp_config_dir }}/oc"
+    dest: "/usr/local/bin/oc"
+    remote_src: yes
+    mode: '0755'
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ sno_ocp_config_dir }}/oc.tar.gz"
+    state: absent

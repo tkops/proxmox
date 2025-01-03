@@ -1,0 +1,17 @@
+- name: Install openshift-install
+  block:
+    - name: Check oc client version
+      register: sno_check_oc_client_version
+      changed_when: false
+      failed_when: false
+      ansible.builtin.shell: |
+        /usr/local/bin/oc version --client | awk '/Client Version/{print $NF }'
+
+    - name: Set installed oc client version
+      ansible.builtin.set_fact:
+        sno_oc_client_installed_version: "{{ sno_check_oc_client_version.stdout }}"
+
+    - name: Set sno_install_openshift_install
+      when: sno_oc_client_installed_version is not defined or sno_oc_client_installed_version != sno_ocp_version
+      ansible.builtin.set_fact:
+        sno_install_oc_client: true

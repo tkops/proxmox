@@ -6,3 +6,6 @@ proxmox ansible_host=192.168.178.150
 
 [nextcloud]
 nextcloud-test ansible_host=192.168.178.102 vmid=102
+
+[ocp]
+control01 ansible_host=192.168.178.110 vmid=110

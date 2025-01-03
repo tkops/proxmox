@@ -1,0 +1,17 @@
+- name: Install openshift-install
+  block:
+    - name: Check openshift-install version
+      register: sno_check_openshift_install_version
+      changed_when: false
+      failed_when: false
+      ansible.builtin.shell: |
+        /usr/local/bin/openshift-install version | awk '/openshift-install/{print $NF }'
+
+    - name: Set installed openshift-install version
+      ansible.builtin.set_fact:
+        sno_openshift_install_installed_version: "{{ sno_check_openshift_install_version.stdout }}"
+
+    - name: Set sno_install_openshift_install
+      when: sno_openshift_install_installed_version is not defined or sno_openshift_install_installed_version != sno_ocp_version
+      ansible.builtin.set_fact:
+        sno_install_openshift_install: true

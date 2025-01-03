@@ -1,0 +1,26 @@
+---
+- name: Read ssh pub key
+  set_fact:
+    ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+- name: Create single node openshift vm
+  loop: "{{ groups['ocp'] }}"
+  vars:
+    vm_name: "{{ hostvars[item]['inventory_hostname'] }}"
+    vmid: "{{ hostvars[item]['vmid'] }}"
+  community.general.proxmox_kvm:
+    api_host: "{{ proxmox_api }}"
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_password }}"
+    name: "{{ sno_vm_name }}"
+    vmid: "{{ sno_vmid }}"
+    node: "{{ proxmox_node }}"
+    cores: "{{ sno_cores }}"
+    memory: "{{ sno_mem }}"
+    storage: "{{ sno_storage }}"
+    ide:
+      ide2: "{{ sno_iso_image_location }}/{{ sno_iso_image_name }},media=cdrom"
+    boot: "order=ide2"
+    state: present
+    validate_certs: false
+

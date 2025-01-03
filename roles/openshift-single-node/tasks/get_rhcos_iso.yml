@@ -1,0 +1,21 @@
+- name: Create ocp config dir
+  ansible.builtin.file:
+    path: "{{ sno_ocp_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Get rhcos iso url
+  register: sno_rhcos_iso_url_results
+  changed_when: false
+  ansible.builtin.shell: |
+    /usr/local/bin/openshift-install coreos print-stream-json | grep location | grep {{ sno_arch }} | grep iso | cut -d\" -f4
+
+- name: Set rhcos iso url
+  ansible.builtin.set_fact:
+    sno_rhcos_iso_url: "{{ sno_rhcos_iso_url_results.stdout }}"
+
+- name: Download rhcos iso
+  ansible.builtin.get_url:
+    url: "{{ sno_rhcos_iso_url }}"
+    dest: "{{ sno_ocp_config_dir}}/{{ sno_iso_image_name }}"
+

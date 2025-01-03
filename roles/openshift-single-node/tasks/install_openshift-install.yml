@@ -1,0 +1,24 @@
+- name: Download openshift-install
+  ansible.builtin.get_url:
+    url: "{{ sno_openshift_install_download_url }}"
+    dest: "{{ sno_ocp_config_dir }}/openshift-install-linux.tar.gz"
+    validate_certs: no
+
+- name: Extract openshift-install binary
+  ansible.builtin.unarchive:
+    src: "{{ sno_ocp_config_dir }}/openshift-install-linux.tar.gz"
+    dest: "{{ sno_ocp_config_dir }}"
+    remote_src: yes
+
+- name: Move openshift-install to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: "{{ sno_ocp_config_dir }}/openshift-install"
+    dest: "/usr/local/bin/openshift-install"
+    remote_src: yes
+    mode: '0755'
+
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ sno_ocp_config_dir }}/openshift-install-linux.tar.gz"
+    state: absent

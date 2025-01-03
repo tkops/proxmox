@@ -1,0 +1,12 @@
+---
+sno_install_openshift_install: false
+sno_install_oc_client: false
+sno_oc_client_install: false
+sno_ocp_version: "{{ ocp_version }}"
+sno_iso_image_location: "{{ proxmox_iso_image_location }}"
+sno_vm_name: "{{ vm_name }} "
+sno_vmid: "{{ vmid }}"
+sno_base_domain: "{{ base_domain }}"
+sno_cluster_name: "{{ cluster_name }}"
+sno_pullsecret: "{{ pullsecret }}"
+sno_ssh_pub_key: "{{ ssh_pub_key }}"

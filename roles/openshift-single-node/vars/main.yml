@@ -1,0 +1,13 @@
+---
+sno_arch: x86_64
+sno_oc_client_download_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ sno_ocp_version }}/openshift-client-linux.tar.gz"
+sno_openshift_install_download_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ sno_ocp_version }}/openshift-install-linux.tar.gz"
+sno_iso_image_name: "rhcos-live.iso"
+sno_cores: 8
+sno_mem: 8192
+sno_storage: "local-lvm"
+sno_disks:
+  - size: 120G
+    storage: "local-lvm"
+sno_install_disk: /dev/sda
+sno_ocp_config_dir: "~/ocp"

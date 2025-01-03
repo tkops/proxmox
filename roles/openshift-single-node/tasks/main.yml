@@ -1,0 +1,23 @@
+---
+- import_tasks: check_openshift-install.yml
+  tags: prepare,openshift-install
+
+- import_tasks: install_openshift-install.yml
+  when: sno_install_openshift_install
+  tags: prepare,openshift-install
+
+- import_tasks: check_oc_client.yml
+  tags: prepare,oc-client
+
+- import_tasks: install_oc_client.yml
+  when: sno_install_oc_client
+  tags: prepare,oc-client
+
+- import_tasks: get_rhcos_iso.yml
+  tags: prepare,rhcos-iso
+
+- import_tasks: create_ocp_config.yml
+  tags: prepare,ocp-config
+
+- import_tasks: create_vm.yml
+  tags: install

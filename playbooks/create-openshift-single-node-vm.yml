@@ -1,0 +1,11 @@
+---
+- name: Clone a VM on Proxmox
+  hosts: ansible
+  gather_facts: false
+  vars:
+    ocp_version: "4.17.10"
+    iso_image_location: "local:iso"
+    vm_name: "{{ inventory_hostname }}"
+    vmid: "{{ hostvars[inventory_hostname]['vmid'] }}"
+  roles:
+    - openshift-single-node

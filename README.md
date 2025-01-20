@@ -21,10 +21,10 @@
 <details>
 <summary>Lösungen</summary>
 
-`mkdir myfirst-repo-student111 && cd $_`<br>
-`(echo -n "which git -> ";which  git)  > ls01-git-basics-installation.txt`<br>
-`(echo -n "rpm -qf /us/bin/git -> ";rpm -qf /usr/bin/git) >> ls01-git-basics-installation.txt`<br>
-`(echo "dnf info git ->";dnf info git) >> ls01-git-basics-installation.txt`<br>
+- `mkdir myfirst-repo-student111 && cd $_`
+- `(echo -n "which git -> ";which  git)  > ls01-git-basics-installation.txt`
+- `(echo -n "rpm -qf /us/bin/git -> ";rpm -qf /usr/bin/git) >> ls01-git-basics-installation.txt`
+- `(echo "dnf info git ->";dnf info git) >> ls01-git-basics-installation.txt`
 
 
 </details>

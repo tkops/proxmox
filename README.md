@@ -19,8 +19,12 @@
 |-------------------|---------------------------|------------------------------------------|
 
 <details>
-<summary>blaaaa</summary>
-bla bla wird nicht gezeigt
+<summary>Lösungen</summary>
+```bash
+mkdir myfirst-repo-student111 && cd $_
+(echo -n "which git -> ";which  git)  > ls01-git-basics-installation.txt
+(echo -n "rpm -qf /us/bin/git -> ";rpm -qf /usr/bin/git) >> ls01-git-basics-installation.txt
+(echo "dnf info git ->";dnf info git) >> ls01-git-basics-installation.txt
+```
 </details>
-
 

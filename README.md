@@ -17,3 +17,10 @@
 | **User Settings** | Root Password             | Root password is set                     |
 |                   | User Creation             | User tobias will be created              |
 |-------------------|---------------------------|------------------------------------------|
+
+<details>
+<summary>blaaaa</summary>
+bla bla wird nicht gezeigt
+</details>
+
+
